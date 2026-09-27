@@ -20,7 +20,7 @@ Configure the API to allow CORS requests from `http://localhost:4200`.
 
 ```bash
 docker build -t movies.client:dev .
-docker run --rm -p 4200:80 --name MoviesClient movies.client:dev
+docker run --rm -p 4200:4200 --name MoviesClient movies.client:dev
 ```
 
 The app is available at `http://localhost:4200/`.
