@@ -2,7 +2,7 @@
 
 Angular frontend for the Movies API. The movie catalog uses the generated OpenAPI client for title search, genre and language filters, sorting, and server-side pagination. The API base URL is `http://localhost:5043`.
 
-# Run with API
+## Run with API
 
 The API's Docker Compose looks to run the movies.client:dev image as a service, so you can just run the docker compose in the API project for complete setup.
 
