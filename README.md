@@ -1,6 +1,6 @@
 # Movies.Client
 
-Angular frontend for the Movies API. The movie catalog uses the generated OpenAPI client for title search, genre and language filters, sorting, and server-side pagination. The API base URL is `http://localhost:5043`.
+Angular frontend for the Movies API. The movie catalog uses the generated OpenAPI client for title search, genre and language filters, sorting, and server-side pagination. The API base URL is `http://localhost:8080`.
 
 ## Run with API
 

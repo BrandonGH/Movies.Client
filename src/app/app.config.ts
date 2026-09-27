@@ -9,7 +9,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideHttpClient(withInterceptorsFromDi()),
-    provideDefaultClient({ basePath: 'http://localhost:5043' }),
+    provideDefaultClient({ basePath: 'http://localhost:8080' }),
     provideRouter(routes),
   ]
 };
