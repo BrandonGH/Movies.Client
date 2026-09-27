@@ -1,0 +1,122 @@
+<main id="main-content" class="mx-auto w-[calc(100%-2rem)] max-w-370 py-9 sm:w-[calc(100%-4rem)] sm:py-14">
+  <section class="flex flex-wrap items-end justify-between gap-5" aria-labelledby="page-title">
+    <div>
+      <h1 id="page-title" class="font-[Manrope] text-4xl font-semibold leading-tight text-(--color-text-heading) sm:text-[42px]">Movies</h1>
+      <p class="mt-2 text-sm text-(--color-text-secondary)">An insight into the ratings and popularity of films.</p>
+    </div>
+    <div class="flex items-baseline gap-2 pb-1" aria-live="polite">
+      <span class="font-[Manrope] text-3xl font-semibold tabular-nums text-(--color-brand)">{{ totalCount | number }}</span>
+      <span class="text-xs text-(--color-text-muted)">films in the archive</span>
+    </div>
+  </section>
+
+  <section class="mt-8" aria-label="Search and filter movies">
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(260px,1.6fr)_minmax(180px,0.8fr)_minmax(180px,0.8fr)]">
+      <label class="grid gap-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-(--color-brand-soft)">
+        Search titles
+        <input class="h-11 rounded-md border border-(--color-border-input) bg-(--color-surface) px-3.5 text-sm font-normal normal-case tracking-normal text-(--color-text-input) outline-none transition focus:border-(--color-focus) focus:ring-2 focus:ring-(--color-focus-ring)" type="search" placeholder="Search by movie title" aria-label="Search movie titles" (input)="onSearchInput($event)" />
+      </label>
+      <label class="grid gap-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-(--color-brand-soft)">
+        Genre
+        <mat-select multiple panelClass="genre-filter-panel" [value]="genreFilter" (selectionChange)="onGenreChange($event.value)" aria-label="Filter by genre" class="genre-filter-select">
+          <mat-select-trigger>{{ genreFilter.length > 1 ? genreFilter.length + ' genres selected' : genreFilter[0] || 'All genres' }}</mat-select-trigger>
+          @for (genre of genreOptions; track genre) {
+            <mat-option [value]="genre">{{ genre }}</mat-option>
+          }
+        </mat-select>
+      </label>
+      <label class="grid gap-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-(--color-brand-soft)">
+        Language
+        <input class="h-11 rounded-md border border-(--color-border-input) bg-(--color-surface) px-3.5 text-sm font-normal lowercase tracking-normal text-(--color-text-input) outline-none transition focus:border-(--color-focus) focus:ring-2 focus:ring-(--color-focus-ring)" type="text" placeholder="e.g. en" aria-label="Filter by original language" [value]="languageFilter" (input)="onLanguageChange($event)" />
+      </label>
+    </div>
+  </section>
+
+  <section class="mt-7 overflow-hidden rounded-lg border border-(--color-border) bg-(--color-surface-translucent)" aria-label="Movie catalog">
+    <div class="flex min-h-12 items-center justify-between gap-4 border-b border-(--color-border-soft) px-4 sm:px-5">
+      <div class="flex items-center gap-2.5 text-xs font-semibold text-(--color-brand-deep)"><span class="size-2 rounded-full bg-(--color-accent-soft)" aria-hidden="true"></span>All movies</div>
+      <div class="flex items-center gap-2 text-xs text-(--color-text-results)" aria-live="polite">
+        @if (loading) {
+          <mat-spinner diameter="16" aria-label="Loading movies" />
+          <span>Updating results</span>
+        } @else if (hasError) {
+          <span class="text-(--color-error)">Couldn’t load movies.</span>
+          <button class="font-semibold text-(--color-brand-action) underline underline-offset-2" type="button" (click)="retry()">Try again</button>
+        } @else {
+          <span>{{ totalCount | number }} results</span>
+        }
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table mat-table [dataSource]="movies" matSort [matSortActive]="sortColumn" [matSortDirection]="sortDirection" (matSortChange)="onSortChange($event)" class="w-full min-w-260 table-fixed">
+        @for (column of columns; track column) {
+          <ng-container [matColumnDef]="column">
+            <th mat-header-cell *matHeaderCellDef [mat-sort-header]="column" [disabled]="!sortableColumns.includes(column)" [style.width.px]="columnWidths[column]" class="h-12 bg-(--color-surface-soft) px-3 text-left font-mono text-[10px] font-medium uppercase tracking-wide text-(--color-brand-header)">{{ labels[column] }}</th>
+            <td mat-cell *matCellDef="let movie" [style.width.px]="columnWidths[column]" class="h-20.5 px-3 font-[DM_Sans] text-xs text-(--color-text-body)">
+              @if (column === 'posterUrl') {
+                <a class="inline-flex h-17 w-12 overflow-hidden rounded-sm bg-(--color-surface-poster)" [href]="movie.posterUrl" target="_blank" rel="noreferrer">
+                  <img class="h-full w-full object-cover" [src]="movie.posterUrl" [alt]="'Poster for ' + movie.title" loading="lazy" />
+                </a>
+              } @else if (column === 'releaseDate') {
+                {{ formatReleaseDate(movie.releaseDate) }}
+              } @else if (column === 'overview') {
+                <span class="block max-w-75 line-clamp-2 leading-5 text-(--color-text-subtle)">{{ movie.overview }}</span>
+              } @else if (column === 'genre') {
+                <span class="text-(--color-brand-genre)">{{ movie.genre.join(' · ') }}</span>
+              } @else if (column === 'popularity') {
+                {{ movie.popularity | number: '1.0-2' }}
+              } @else if (column === 'voteCount') {
+                {{ movie.voteCount | number }}
+              } @else if (column === 'voteAverage') {
+                <span class="inline-flex items-baseline gap-1 font-mono text-(--color-brand-rating)"><strong>{{ movie.voteAverage | number: '1.1-1' }}</strong><span class="text-[10px] text-(--color-rating-muted)">/ 10</span></span>
+              } @else if (column === 'originalLanguage') {
+                <span class="inline-block min-w-7 font-mono uppercase text-(--color-brand-language)">{{ movie.originalLanguage }}</span>
+              } @else {
+                <span class="font-semibold text-(--color-text-title)">{{ movie.title }}</span>
+              }
+            </td>
+          </ng-container>
+        }
+
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns" class="transition-colors hover:bg-(--color-surface-hover)"></tr>
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell h-32 text-center text-sm text-(--color-text-empty)" [attr.colspan]="columns.length">
+            @if (hasError) {
+              <div role="alert" class="mx-auto grid max-w-2xl gap-1 px-4 py-5 text-left">
+                <p class="font-semibold text-(--color-error)">{{ problemTitle }}</p>
+                @if (problemDetail) {
+                  <p class="text-(--color-text-subtle)">{{ problemDetail }}</p>
+                }
+                @if (problemStatus) {
+                  <p class="font-mono text-xs text-(--color-text-muted)">HTTP {{ problemStatus }}</p>
+                }
+                @if (validationErrors.length) {
+                  <ul class="mt-1 list-inside list-disc text-(--color-text-subtle)">
+                    @for (message of validationErrors; track message) {
+                      <li>{{ message }}</li>
+                    }
+                  </ul>
+                }
+              </div>
+            } @else if (!loading) {
+              No movies match these filters.
+            }
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <mat-paginator
+      [length]="totalCount"
+      [pageIndex]="pageIndex"
+      [pageSizeOptions]="pageSizeOptions"
+      [pageSize]="pageSize"
+      (page)="onPageChange($event)"
+      showFirstLastButtons
+      aria-label="Select movie table page"
+      class="border-t border-(--color-border-soft)"
+    />
+  </section>
+</main>
